@@ -14,7 +14,7 @@ const port = process.env.PORT;
 
 app.use(cors());
 
-app.use(cookieParser('keyboard cat'));
+app.use(cookieParser());
 
 // parse application/json
 app.use(bodyParser.json());

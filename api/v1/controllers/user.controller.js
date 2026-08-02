@@ -171,7 +171,7 @@ module.exports.otpPassword = async (req, res) => {
         });
 
         if (!result) {
-            res.status(400).json({
+            return res.status(400).json({
                 message: "Mã OTP không hợp lệ"
             });
         }
@@ -200,8 +200,46 @@ module.exports.otpPassword = async (req, res) => {
         });
 
         res.status(200).json({
-            message: "Xác thực thành công",
+            message: "Xác thực thành công!",
             token: token
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Lỗi server!"
+        });
+    }
+}
+
+// [POST] /api/v1/users/password/reset
+module.exports.resetPassword = async (req, res) => {
+    try {
+        const password = req.body.password;
+
+        const user = await User.findOne({
+            _id: req.user.userId,
+            deleted: false
+        });
+
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash(password, salt);
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (isMatch) {
+            return res.status(400).json({
+                message: "Vui lòng nhập mật khẩu mới khác mật khẩu cũ!"
+            });
+        }
+
+        await User.updateOne({
+            _id: req.user.userId,
+            deleted: false
+        }, {
+            password: hash
+        });
+
+        res.status(200).json({
+            message: "Đổi mật khẩu thành công!"
         });
     } catch (error) {
         console.error(error);
