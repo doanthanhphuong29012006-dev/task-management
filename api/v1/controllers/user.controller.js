@@ -2,6 +2,10 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/user.model');
+const ForgotPassword = require('../models/forgot-password.model');
+
+const generateHelper = require('../../../helpers/generate');
+const sendMailHelper = require('../../../helpers/sendMail');
 
 // [POST] /api/v1/users/register
 module.exports.register = async (req, res) => {
@@ -106,4 +110,44 @@ module.exports.login = async (req, res) => {
             message: "Lỗi server!"
         });
     }
+}
+
+// [POST] /api/v1/users/password/forgot
+module.exports.forgotPassword = async (req, res) => {
+    const email = req.body.email;
+
+    const user = await User.findOne({
+        email: email,
+        deleted: false
+    });
+
+    if (!user) {
+        return res.status(400).json({
+            message: "Email không tồn tại!"
+        });
+    }
+
+    const otp = generateHelper.generateRandomNumber(6);
+
+    const objectForgotPassword = {
+        email: email,
+        otp: otp,
+        expiresAt: Date.now()
+    };
+
+    const subject = "Mã OTP lấy lại mật khẩu";
+    const html = `
+        <h2>Xin chào ${user.fullName}!</h2>
+        <p>Bạn đã yêu cầu lấy lại mật khẩu. Mã OTP của bạn là: <b style="font-size: 20px; color: blue;">${otp}</b></p>
+        <p>Mã này sẽ hết hạn sau 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>
+    `;
+    
+    sendMailHelper.sendMail(email, subject, html);
+
+    const forgotPassword = new ForgotPassword(objectForgotPassword);
+    await forgotPassword.save();
+
+    res.status(200).json({
+        message: "Đã gửi OTP qua email!"
+    });
 }
