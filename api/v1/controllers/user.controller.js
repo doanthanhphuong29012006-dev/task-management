@@ -248,3 +248,16 @@ module.exports.resetPassword = async (req, res) => {
         });
     }
 }
+
+// [GET] /api/v1/users/detail
+module.exports.detail = async (req, res) => {
+    const user = await User.findOne({
+        _id: req.user.userId,
+        deleted: false
+    }).select("-password");
+
+    res.status(200).json({
+        message: "Thành công",
+        info: user
+    });
+}
