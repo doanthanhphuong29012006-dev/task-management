@@ -158,3 +158,55 @@ module.exports.forgotPassword = async (req, res) => {
         });
     }
 }
+
+// [POST] /api/v1/users/password/otp
+module.exports.otpPassword = async (req, res) => {
+    try {
+        const email = req.body.email;
+        const otp = req.body.otp;
+
+        const result = await ForgotPassword.findOne({
+            email: email,
+            otp: otp
+        });
+
+        if (!result) {
+            res.status(400).json({
+                message: "Mã OTP không hợp lệ"
+            });
+        }
+
+        const user = await User.findOne({
+            email: email,
+            deleted: false
+        });
+
+        await ForgotPassword.deleteOne({ _id: result.id });
+
+        const payload = {
+            userId: user.id,
+            email: email
+        }
+
+        const token = jwt.sign(payload, process.env.JWT_SECRET, {
+            expiresIn: '1h'
+        });
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 60 * 60 * 1000
+        });
+
+        res.status(200).json({
+            message: "Xác thực thành công",
+            token: token
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Lỗi server!"
+        });
+    }
+}
