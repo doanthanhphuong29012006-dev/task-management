@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 const database = require('./config/database');
 
@@ -12,6 +13,8 @@ const app = express();
 const port = process.env.PORT;
 
 app.use(cors());
+
+app.use(cookieParser('keyboard cat'));
 
 // parse application/json
 app.use(bodyParser.json());
