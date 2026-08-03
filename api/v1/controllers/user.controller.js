@@ -274,3 +274,22 @@ module.exports.detail = async (req, res) => {
         });
     }
 }
+
+// [GET] /api/v1/users/list
+module.exports.list = async (req, res) => {
+    try {
+        const users = await User.find({
+            deleted: false
+        }).select("fullName email");
+
+        res.status(200).json({
+            message: "Thành công",
+            users: users
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Lỗi server!"
+        });
+    }
+}
