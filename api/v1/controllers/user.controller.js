@@ -251,13 +251,26 @@ module.exports.resetPassword = async (req, res) => {
 
 // [GET] /api/v1/users/detail
 module.exports.detail = async (req, res) => {
-    const user = await User.findOne({
-        _id: req.user.userId,
-        deleted: false
-    }).select("-password");
+    try {
+        const user = await User.findOne({
+            _id: req.user.userId,
+            deleted: false
+        }).select("-password");
 
-    res.status(200).json({
-        message: "Thành công",
-        info: user
-    });
+        if (!user) {
+            return res.status(404).json({
+                message: "Tài khoản không tồn tại hoặc đã bị khóa!"
+            });
+        }
+
+        res.status(200).json({
+            message: "Thành công",
+            info: user
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Lỗi server!"
+        });
+    }
 }
